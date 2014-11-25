@@ -1,4 +1,4 @@
-A library to read log files, process them to information and push to ElasticSearch for analytics
+A library to read log files, process them to extract/convert them to information and push to ElasticSearch for further analytics, reporting.
 
 chaining LogReader -> ElasticSearchPusher
 ```
