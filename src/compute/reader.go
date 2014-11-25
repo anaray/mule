@@ -74,72 +74,23 @@ func (reader *LogReaderCompute) process(file string, arg Args, regexp *regexp.Re
 			panic(err)
 		}
 		if err == io.EOF {
-			//close(arg.Outgoing)
-
-			//arg.Outgoing<-nil
-
 			packet := NewPacket()
 			packet["log"] = lg
 			packet["source"] = file
 			arg.Outgoing <- packet
-
-			//emptyPacket := NewPacket()
-			//emptyPacket["log"] = nil
-			//emptyPacket["source"] = nil
-			//emptyPacket:=nil
-			//arg.Outgoing<-emptyPacket.(Packet)
 			break
 		}
 
-		//_, err = reader.Regnet.MatchInText(string(line), "%{MS_DELIM}")
-		/*res := regexp.FindAllString(string(line), -1)
-		if res != nil {
-			arg.Outgoing <- line
-		}*/
-		/*if err != nil {
-			arg.Outgoing <- line
-		}*/
-		//fmt.Println("================================")
-		//fmt.Println("LINE :",string(line))
-
-		//all := regexp.FindAll(line, -1)
-		/*for match := range all {
-			fmt.Println("Match :",string(all[match]))
-		}*/
-		/*if all != nil {
-			arg.Outgoing <- line
-		}*/
-
-		//message := string(line)
 		if regexp.Match(line) == true {
-			//count=count+1
-
 			if len(lg.Store) > 0 {
 				packet := NewPacket()
 				packet["log"] = lg
 				packet["source"] = file
-				//fmt.Println("checking packet .....",string(lg.Store[0:8]) )
-				if  string(lg.Store[0:8])!="07/09/14" {
-					fmt.Println("FOUND ::", string(lg.Store[0:8]))
-				}
 				arg.Outgoing <- packet
 			}
 			lg = Logs{Store: line}
-
-			//arg.Outgoing<-line
-			//fmt.Println(" : MATCHED ")
-
-			//}else{
-			//fmt.Println(" : NOT MATCHED")
 		} else {
 			lg.Store = append(lg.Store[:], line[:]...)
 		}
-		//fmt.Println("================================")
-
-		//if res != nil {
-		//	arg.Outgoing <- line
-		//}
 	}
-	//fmt.Println("Count at Reader::::::::::::::::::::::::::::::::::::::::::::::",count)
-
 }

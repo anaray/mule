@@ -26,55 +26,7 @@ type PacketHolder struct {
 func NewPacketHolder() PacketHolder { return PacketHolder{buffer: []Packet{}} }
 
 func (holder PacketHolder) Merge(other PacketHolder) PacketHolder {
-	buffer := holder.buffer
-	fmt.Println("inside Merge..")
-	for _, packet := range buffer {
-		log := packet["log"].(Logs)
-		//fmt.Print(">>>>>>>>>>>>>>>>> ", string(log.Store))
-		//src := packet["source"]
-		//n:=bytes.Index(log.Store,[]byte{0})
-		l:=string(log.Store[0:len(log.Store)])
-		if !strings.HasPrefix(l,"07/09/14"){
-			count=count+1
-			fmt.Println("Jumbled:", l)
-			
-			fmt.Println("Jumbled count ::",count)
-
-			fmt.Println("Actual")
-			for _, p:=range log.Store {
-				fmt.Print(string(p))
-			}
-			fmt.Println("===========================================================")
-		}
-	}
-	p := PacketHolder{buffer: append(holder.buffer, other.buffer...)}
-	//return PacketHolder{buffer: append(holder.buffer, other.buffer...)}
-
-	/*buf := p.buffer
-	for _, packet := range buf {
-		log := packet["log"].(Logs)
-		//fmt.Print(">>>>>>>>>>>>>>>>> ", string(log.Store))
-		//src := packet["source"]
-		//n:=bytes.Index(log.Store,[]byte{0})
-		l:=string(log.Store[0:len(log.Store)])
-		if !strings.HasPrefix(l,"07/09/14"){
-			count=count+1
-			fmt.Println("Jumbled:", string(log.Store))
-			
-			fmt.Println("Jumbled count ::",count)
-
-			/*fmt.Println("Actual")
-			for _, p:=range log.Store {
-				fmt.Print(string(p))
-			}
-			fmt.Println("===========================================================")
-		}
-		
-	
-	}*/
-
-
-	return p
+	return PacketHolder{buffer: append(holder.buffer, other.buffer...)}
 }
 
 func (p *ElasticSearchPlugin) Execute(arg Args) {
@@ -85,16 +37,6 @@ func (p *ElasticSearchPlugin) Execute(arg Args) {
 	for {
 		// packet is a Map
 		packet := <-arg.Incoming
-				//packet["log"] = lg
-				//packet["source"] = file
-				//fmt.Println("checking packet .....",string(lg.Store[0:8]) )
-				lg:=packet["log"].(Logs)
-				if  string(lg.Store[0:8])!="07/09/14" {
-					fmt.Println("FOUND ::", string(lg.Store[0:8]))
-				}else {
-					//fmt.Println("Not found ::", string(lg.Store[0:8]))
-				}
-
 		in <- PacketHolder{buffer: []Packet{packet}}
 	}
 }
@@ -128,17 +70,7 @@ func pushToElasticSearch(out chan PacketHolder) {
 	for {
 		select {
 		case holder := <-out:
-			buffer := holder.buffer
-			for _, packet := range buffer {
-				log := packet["log"].(Logs)
-
-				if !strings.HasPrefix(string(log.Store[0:len(log.Store)]),"07/09/14"){
-					//fmt.Println("Jumbled >",string(log.Store))
-				}
-				//fmt.Println("::: >",string(log.Store))
-
-			}
-			//go process(holder)
+			go process(holder)
 		}
 	}
 }
@@ -161,23 +93,9 @@ func process(packetHolder PacketHolder) {
 	buffer := packetHolder.buffer
 	for _, packet := range buffer {
 		log := packet["log"].(Logs)
-		//fmt.Print(">>>>>>>>>>>>>>>>> ", string(log.Store))
 		src := packet["source"]
 		//n:=bytes.Index(log.Store,[]byte{0})
 		l:=string(log.Store[0:len(log.Store)])
-		if !strings.HasPrefix(l,"07/09/14"){
-			count=count+1
-			fmt.Println("Jumbled:", l)
-			
-			fmt.Println("Jumbled count ::",count)
-
-			fmt.Println("Actual")
-			for _, p:=range log.Store {
-				fmt.Print(string(p))
-			}
-			fmt.Println("===========================================================")
-		}
-		
 		logRecord := LogRecord{Record: l, Source: src.(string)}
 		logRecordStr, _ := json.Marshal(logRecord)
 		wg.Add(1)
