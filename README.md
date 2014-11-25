@@ -1,4 +1,6 @@
-A simple example: chaining LogReader -> ElasticSearchPusher
+A library to read log files, process them to information and push to ElasticSearch for analytics
+
+chaining LogReader -> ElasticSearchPusher
 ```
 package main
 
