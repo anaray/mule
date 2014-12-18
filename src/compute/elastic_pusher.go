@@ -17,10 +17,6 @@ func ElasticSearch() *ElasticSearchPlugin {
 	return new(ElasticSearchPlugin)
 }
 
-type PacketHolder struct {
-	buffer *list.List
-}
-
 func (p *ElasticSearchPlugin) Execute(arg Args) {
 	packetChannel := make(chan Packet, 10000)
 	connection := elastigo.NewConn()
@@ -55,7 +51,6 @@ func pushToElasticSearch(packetChannel chan Packet, indexer *elastigo.BulkIndexe
 		}
 	}
 }
-
 
 type LogRecord struct {
 	Record string `json:"record"`
