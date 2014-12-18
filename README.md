@@ -1,6 +1,6 @@
 A library to read log files, process them to extract/convert them to information and push to ElasticSearch for further analytics, reporting.
 
-chaining LogReader -> ElasticSearchPusher
+Exmaple : chaining a LogReader and ElasticSearchPusher
 ```
 package main
 
