@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var logger *Log
+var esLogger *Log
 
 type ElasticSearchCompute struct{}
 
@@ -21,7 +21,7 @@ func ElasticSearch() *ElasticSearchCompute {
 func (e *ElasticSearchCompute) String() string { return "compute.ElasticSearchCompute" }
 
 func (e *ElasticSearchCompute) Execute(arg Args) {
-	logger = arg.Logger
+	esLogger = arg.Logger
 	packetChannel := make(chan Packet, 10000)
 	connection := elastigo.NewConn()
 	connection.Domain = "localhost"
@@ -47,7 +47,7 @@ func pushToElasticSearch(packetChannel chan Packet, indexer *elastigo.BulkIndexe
 	// errors
 	go func() {
   		for errBuf := range indexer.ErrorChannel {
-    		logger.logf("ERROR: %v",errBuf.Err)
+    		esLogger.logf("ERROR: %v",errBuf.Err)
   		}
 	}()
 
@@ -61,7 +61,7 @@ func pushToElasticSearch(packetChannel chan Packet, indexer *elastigo.BulkIndexe
 				logRecordStr, _ := json.Marshal(logRecord)
 				err := indexer.Index("testindex", "user", strconv.FormatInt(time.Now().UnixNano(), 36), "", nil, logRecordStr, false)
 				if err != nil {
-					logger.logf("ERROR: %v",err)
+					esLogger.logf("ERROR: %v",err)
 				}
 			}
 		}

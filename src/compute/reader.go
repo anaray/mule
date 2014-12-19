@@ -17,7 +17,7 @@ type Logs struct {
 	Store string
 }
 
-var logger *Log
+var logReaderLogger *Log
 
 func LogReader() *LogReaderCompute {
 	r, _ := regnet.New()
@@ -31,8 +31,8 @@ func LogReader() *LogReaderCompute {
 func (reader *LogReaderCompute) String() string { return "compute.LogReaderCompute" }
 
 func (reader *LogReaderCompute) Execute(arg Args) {
-	logger = arg.Logger
-	logger.logf("Creating LogReader HTTP listener at port %s","8080")
+	logReaderLogger = arg.Logger
+	logReaderLogger.logf("Creating LogReader HTTP listener at port %s","8080")
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		filePath := r.FormValue("path")
 		go reader.process(filePath, arg)
@@ -42,12 +42,12 @@ func (reader *LogReaderCompute) Execute(arg Args) {
 }
 
 func (reader *LogReaderCompute) process(file string, arg Args) { //, regexp *regexp.Regexp) {
-	logger.logf("Recevied request to parse file %s ::", file)
+	logReaderLogger.logf("Recevied request to parse file %s ::", file)
 	//initialize http handler and listen for POST message, get file name from request
 
 	defer func() {
 		if r := recover(); r != nil {
-			logger.logf("ERROR: %v", r)
+			logReaderLogger.logf("ERROR: %v", r)
 		}
 	}()
 
@@ -64,7 +64,7 @@ func (reader *LogReaderCompute) process(file string, arg Args) { //, regexp *reg
 	// make a read buffer
 	r := bufio.NewReaderSize(f, 1024*1024)
 	var lg *Logs
-	logger.logf("Started parsing file %s at %s:", file, time.Now().String())
+	logReaderLogger.logf("Started parsing file %s at %s:", file, time.Now().String())
 	for {
 		// read a chunk
 		line, err := r.ReadSlice('\n')
@@ -76,7 +76,7 @@ func (reader *LogReaderCompute) process(file string, arg Args) { //, regexp *reg
 			packet["log"] = lg
 			packet["source"] = file
 			arg.Outgoing <- packet
-			logger.logf("Completed parsing file %s at %s:", file, time.Now().String())
+			logReaderLogger.logf("Completed parsing file %s at %s:", file, time.Now().String())
 			break
 		}
 
