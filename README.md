@@ -9,6 +9,10 @@ export PATH=$GOPATH/bin:$PATH
 go get github.com/anaray/regnet/ 
 go get github.com/mattbaird/elastigo/
 
+go install compute
+go install mule
+mule //starts the mule process
+
 ```
 
 Example : chaining a LogReader and ElasticSearchPusher
