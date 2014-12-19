@@ -1,6 +1,17 @@
 A library to read log files, process them to extract/convert them to information and push to ElasticSearch for further analytics, reporting.
 
-Exmaple : chaining a LogReader and ElasticSearchPusher
+###### Getting Started
+```
+cd /myhome/mymule/
+git clone https://github.com/anaray/mule.git
+export GOPATH=/myhome/mymule/mule
+export PATH=$GOPATH/bin:$PATH
+go get github.com/anaray/regnet/ 
+go get github.com/mattbaird/elastigo/
+
+```
+
+Example : chaining a LogReader and ElasticSearchPusher
 ```
 package main
 
