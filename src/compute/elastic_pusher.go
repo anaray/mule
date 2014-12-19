@@ -8,7 +8,6 @@ import (
 	"os"
 	"strconv"
 	"time"
-	"container/list"
 )
 
 type ElasticSearchPlugin struct {}
