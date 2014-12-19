@@ -10,23 +10,23 @@ import (
 	"time"
 )
 
+var logger *Log
+
 type ElasticSearchCompute struct{}
 
 func ElasticSearch() *ElasticSearchCompute {
 	return new(ElasticSearchCompute)
 }
 
-/*func (e *ElasticSearchCompute) Info() (string) {
-	return "compute.ElasticSearchCompute"
-}*/
-
 func (e *ElasticSearchCompute) String() string { return "compute.ElasticSearchCompute" }
 
 func (e *ElasticSearchCompute) Execute(arg Args) {
+	logger = arg.Logger
 	packetChannel := make(chan Packet, 10000)
 	connection := elastigo.NewConn()
 	connection.Domain = "localhost"
-	indexer := connection.NewBulkIndexer(10)
+	//indexer := connection.NewBulkIndexer(10)
+	indexer := connection.NewBulkIndexerErrors(10, 60)
 	indexer.BulkMaxDocs = 10000
 	indexer.BufferDelayMax = 1000 * time.Millisecond
 	indexer.Sender = func(buf *bytes.Buffer) error {
@@ -43,6 +43,14 @@ func (e *ElasticSearchCompute) Execute(arg Args) {
 }
 
 func pushToElasticSearch(packetChannel chan Packet, indexer *elastigo.BulkIndexer) {
+	//loop the error channel of the elastigo bulk indexer to check if there are any
+	// errors
+	go func() {
+  		for errBuf := range indexer.ErrorChannel {
+    		logger.logf("ERROR: %v",errBuf.Err)
+  		}
+	}()
+
 	for {
 		select {
 		case packet := <-packetChannel:
@@ -51,7 +59,10 @@ func pushToElasticSearch(packetChannel chan Packet, indexer *elastigo.BulkIndexe
 			if log != nil {
 				logRecord := LogRecord{Record: log.Store, Source: src.(string)}
 				logRecordStr, _ := json.Marshal(logRecord)
-				indexer.Index("testindex", "user", strconv.FormatInt(time.Now().UnixNano(), 36), "", nil, logRecordStr, false)
+				err := indexer.Index("testindex", "user", strconv.FormatInt(time.Now().UnixNano(), 36), "", nil, logRecordStr, false)
+				if err != nil {
+					logger.logf("ERROR: %v",err)
+				}
 			}
 		}
 	}

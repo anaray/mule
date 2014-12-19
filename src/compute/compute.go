@@ -16,13 +16,13 @@ type Packet map[string]interface{}
 
 func Run(computes ...Computes) {
 	//done := make()
-	in := make(chan Packet, 100000)
+	in := make(chan Packet, 10000)
 	logger := Logger()
 	logger.logf("Initializing Mule ...")
 	//done := make(chan bool)
 	var indx = 1
 	for _, compute := range computes {
-		out := make(chan Packet, 100000)
+		out := make(chan Packet, 10000)
 		arg := Args{Incoming: in, Outgoing: out, Logger: logger}
 		//for i := 0; i < indx; i++ {
 		logger.logf("Initializing Compute: %s",compute.String())
