@@ -10,13 +10,19 @@ import (
 	"time"
 )
 
-type ElasticSearchPlugin struct {}
+type ElasticSearchCompute struct{}
 
-func ElasticSearch() *ElasticSearchPlugin {
-	return new(ElasticSearchPlugin)
+func ElasticSearch() *ElasticSearchCompute {
+	return new(ElasticSearchCompute)
 }
 
-func (p *ElasticSearchPlugin) Execute(arg Args) {
+/*func (e *ElasticSearchCompute) Info() (string) {
+	return "compute.ElasticSearchCompute"
+}*/
+
+func (e *ElasticSearchCompute) String() string { return "compute.ElasticSearchCompute" }
+
+func (e *ElasticSearchCompute) Execute(arg Args) {
 	packetChannel := make(chan Packet, 10000)
 	connection := elastigo.NewConn()
 	connection.Domain = "localhost"
@@ -32,7 +38,7 @@ func (p *ElasticSearchPlugin) Execute(arg Args) {
 	go pushToElasticSearch(packetChannel, indexer)
 	for {
 		packet := <-arg.Incoming
-		packetChannel<-packet
+		packetChannel <- packet
 	}
 }
 
@@ -40,7 +46,7 @@ func pushToElasticSearch(packetChannel chan Packet, indexer *elastigo.BulkIndexe
 	for {
 		select {
 		case packet := <-packetChannel:
-			log := packet["log"].(*Logs)	
+			log := packet["log"].(*Logs)
 			src := packet["source"]
 			if log != nil {
 				logRecord := LogRecord{Record: log.Store, Source: src.(string)}

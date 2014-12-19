@@ -2,11 +2,11 @@ package compute
 
 import (
 	"bufio"
-	"io"
-	"os"
 	"fmt"
 	"github.com/anaray/regnet"
+	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -27,6 +27,12 @@ func LogReader() *LogReaderCompute {
 	return &LogReaderCompute{Regnet: r}
 }
 
+/*func (reader *LogReaderCompute) Info() (string){
+	return "compute.LogReaderCompute"
+}*/
+
+func (reader *LogReaderCompute) String() string { return "compute.LogReaderCompute" }
+
 func (reader *LogReaderCompute) Execute(arg Args) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		filePath := r.FormValue("path")
@@ -36,7 +42,7 @@ func (reader *LogReaderCompute) Execute(arg Args) {
 	http.ListenAndServe(":8080", nil)
 }
 
-func (reader *LogReaderCompute) process(file string, arg Args) {//, regexp *regexp.Regexp) {
+func (reader *LogReaderCompute) process(file string, arg Args) { //, regexp *regexp.Regexp) {
 	fmt.Println("parsing started at ::", time.Now())
 	//initialize http handler and listen for POST message, get file name from request
 
@@ -85,7 +91,7 @@ func (reader *LogReaderCompute) process(file string, arg Args) {//, regexp *rege
 			lg = NewLog(line)
 		} else {
 			if len(lg.Store) > 0 {
-				store := []byte(lg.Store)	
+				store := []byte(lg.Store)
 				lg.Store = string(append(store[:], line[:]...))
 			}
 		}
@@ -97,4 +103,3 @@ func NewLog(line []byte) *Logs {
 	log.Store = string(line)
 	return log
 }
-
