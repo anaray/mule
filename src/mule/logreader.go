@@ -1,7 +1,9 @@
-package compute
+package mule
 
 import (
+	//"compute"
 	"bufio"
+	"github.com/anaray/compute"
 	"github.com/anaray/regnet"
 	"io"
 	"net/http"
@@ -17,22 +19,24 @@ type Logs struct {
 	Store string
 }
 
-var logReaderLogger *Log
+var logReaderLogger *compute.Log
 
 func LogReader() *LogReaderCompute {
 	r, _ := regnet.New()
-	r.AddPattern("MS_DATE_TIME", `((\d\d[\/]*){3}[\s]*(\d\d[:]*){3}.(\d*))`)
-	r.AddPattern("MS_TZ", `((?:[PMCEI][SD]T|UTC)|GMT-\d\d:\d\d)`)
-	r.AddPattern("LOGLEVEL", `([Aa]lert|ALERT|[Tt]race|TRACE|[Dd]ebug|DEBUG|[Nn]otice|NOTICE|[Ii]nfo|INFO|[Ww]arn?(?:ing)?|WARN?(?:ING)?|[Ee]rr?(?:or)?|ERR?(?:OR)?|[Cc]rit?(?:ical)?|CRIT?(?:ICAL)?|[Ff]atal|FATAL|[Ss]evere|SEVERE|EMERG(?:ENCY)?|[Ee]merg(?:ency)?)`)
-	r.AddPattern("MS_DELIM", `%{MS_DATE_TIME}\s%{MS_TZ}\s%{LOGLEVEL}`)
 	return &LogReaderCompute{Regnet: r}
 }
 
-func (reader *LogReaderCompute) String() string { return "compute.LogReaderCompute" }
+func (reader *LogReaderCompute) String() string { return "compute.logreader" }
 
-func (reader *LogReaderCompute) Execute(arg Args) {
+func (reader *LogReaderCompute) Execute(arg *compute.Args) {
 	logReaderLogger = arg.Logger
-	logReaderLogger.logf("Creating LogReader HTTP listener at port %s","8080")
+	err := reader.Regnet.AddPatternsFromFile("/home/msi/Desktop/metricstream.regnet")
+	if err != nil {
+		logReaderLogger.Logf("ERROR:", err)
+		os.Exit(1)
+	}
+
+	logReaderLogger.Logf("Creating LogReader HTTP listener at port %s", "8080")
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		filePath := r.FormValue("path")
 		go reader.process(filePath, arg)
@@ -41,13 +45,13 @@ func (reader *LogReaderCompute) Execute(arg Args) {
 	http.ListenAndServe(":8080", nil)
 }
 
-func (reader *LogReaderCompute) process(file string, arg Args) { //, regexp *regexp.Regexp) {
-	logReaderLogger.logf("Recevied request to parse file %s ::", file)
+func (reader *LogReaderCompute) process(file string, arg *compute.Args) { //, regexp *regexp.Regexp) {
+	logReaderLogger.Logf("Recevied request to parse file %s", file)
 	//initialize http handler and listen for POST message, get file name from request
 
 	defer func() {
 		if r := recover(); r != nil {
-			logReaderLogger.logf("ERROR: %v", r)
+			logReaderLogger.Logf("ERROR: %v", r)
 		}
 	}()
 
@@ -64,7 +68,7 @@ func (reader *LogReaderCompute) process(file string, arg Args) { //, regexp *reg
 	// make a read buffer
 	r := bufio.NewReaderSize(f, 1024*1024)
 	var lg *Logs
-	logReaderLogger.logf("Started parsing file %s at %s:", file, time.Now().String())
+	logReaderLogger.Logf("Started parsing file %s at %s:", file, time.Now().String())
 	for {
 		// read a chunk
 		line, err := r.ReadSlice('\n')
@@ -72,19 +76,18 @@ func (reader *LogReaderCompute) process(file string, arg Args) { //, regexp *reg
 			panic(err)
 		}
 		if err == io.EOF {
-			packet := NewPacket()
+			packet := compute.NewPacket()
 			packet["log"] = lg
 			packet["source"] = file
 			arg.Outgoing <- packet
-			logReaderLogger.logf("Completed parsing file %s at %s:", file, time.Now().String())
+			logReaderLogger.Logf("Completed parsing file %s at %s:", file, time.Now().String())
 			break
 		}
-
 		exists, _ := reader.Regnet.Exists(line, "%{MS_DELIM}")
 		if exists {
 			if lg != nil && len(lg.Store) > 0 {
 				//push it further
-				packet := NewPacket()
+				packet := compute.NewPacket()
 				packet["log"] = lg
 				packet["source"] = file
 				arg.Outgoing <- packet

@@ -1,16 +1,17 @@
-package compute
+package mule
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/anaray/compute"
 	elastigo "github.com/mattbaird/elastigo/lib"
 	"os"
 	"strconv"
 	"time"
 )
 
-var esLogger *Log
+var esLogger *compute.Log
 
 type ElasticSearchCompute struct{}
 
@@ -20,9 +21,9 @@ func ElasticSearch() *ElasticSearchCompute {
 
 func (e *ElasticSearchCompute) String() string { return "compute.ElasticSearchCompute" }
 
-func (e *ElasticSearchCompute) Execute(arg *Args) {
+func (e *ElasticSearchCompute) Execute(arg *compute.Args) {
 	esLogger = arg.Logger
-	packetChannel := make(chan Packet, 10000)
+	packetChannel := make(chan compute.Packet, 10000)
 	connection := elastigo.NewConn()
 	connection.Domain = "localhost"
 	//indexer := connection.NewBulkIndexer(10)
@@ -42,13 +43,13 @@ func (e *ElasticSearchCompute) Execute(arg *Args) {
 	}
 }
 
-func pushToElasticSearch(packetChannel chan Packet, indexer *elastigo.BulkIndexer) {
+func pushToElasticSearch(packetChannel chan compute.Packet, indexer *elastigo.BulkIndexer) {
 	//loop the error channel of the elastigo bulk indexer to check if there are any
 	// errors
 	go func() {
-  		for errBuf := range indexer.ErrorChannel {
-    		esLogger.logf("ERROR: %v",errBuf.Err)
-  		}
+		for errBuf := range indexer.ErrorChannel {
+			esLogger.Logf("ERROR: %v", errBuf.Err)
+		}
 	}()
 
 	for {
@@ -61,7 +62,7 @@ func pushToElasticSearch(packetChannel chan Packet, indexer *elastigo.BulkIndexe
 				logRecordStr, _ := json.Marshal(logRecord)
 				err := indexer.Index("testindex", "user", strconv.FormatInt(time.Now().UnixNano(), 36), "", nil, logRecordStr, false)
 				if err != nil {
-					esLogger.logf("ERROR: %v",err)
+					esLogger.Logf("ERROR: %v", err)
 				}
 			}
 		}
