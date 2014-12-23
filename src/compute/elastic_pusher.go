@@ -20,7 +20,7 @@ func ElasticSearch() *ElasticSearchCompute {
 
 func (e *ElasticSearchCompute) String() string { return "compute.ElasticSearchCompute" }
 
-func (e *ElasticSearchCompute) Execute(arg Args) {
+func (e *ElasticSearchCompute) Execute(arg *Args) {
 	esLogger = arg.Logger
 	packetChannel := make(chan Packet, 10000)
 	connection := elastigo.NewConn()

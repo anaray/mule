@@ -1,15 +1,20 @@
 package compute
 
+import (
+	"os"
+)
+
 type Args struct {
 	Incoming chan Packet
 	Outgoing chan Packet
-	//Done chan bool
-	Logger *Log
+	//Done chan bool'33
+	Container map[string]interface{}
+	Logger    *Log
 }
 
 type Computes interface {
 	String() string
-	Execute(Args)
+	Execute(*Args)
 }
 
 type Packet map[string]interface{}
@@ -17,7 +22,7 @@ type Packet map[string]interface{}
 func Run(computes ...Computes) {
 	//done := make()
 	in := make(chan Packet, 10000)
-	logger := Logger()
+	logger := Logger(os.Stdout)
 	logger.logf("Initializing Mule ...")
 	//done := make(chan bool)
 	var indx = 1
@@ -25,8 +30,8 @@ func Run(computes ...Computes) {
 		out := make(chan Packet, 10000)
 		arg := Args{Incoming: in, Outgoing: out, Logger: logger}
 		//for i := 0; i < indx; i++ {
-		logger.logf("Initializing Compute: %s",compute.String())
-		go compute.Execute(arg)
+		logger.logf("Initializing Compute: %s", compute.String())
+		go compute.Execute(&arg)
 		//}
 		in = out
 		indx += 1
