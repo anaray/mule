@@ -12,7 +12,7 @@ import (
 )
 
 type LogReaderCompute struct {
-	Regnet *regnet.Regnet
+	//Regnet *regnet.Regnet
 }
 
 type Logs struct {
@@ -22,15 +22,18 @@ type Logs struct {
 var logReaderLogger *compute.Log
 
 func LogReader() *LogReaderCompute {
-	r, _ := regnet.New()
-	return &LogReaderCompute{Regnet: r}
+	//r, _ := regnet.New()
+	//return &LogReaderCompute{Regnet: r}
+	return &LogReaderCompute{}
 }
 
 func (reader *LogReaderCompute) String() string { return "compute.logreader" }
 
 func (reader *LogReaderCompute) Execute(arg *compute.Args) {
+	reg, _ := regnet.New()
+	arg.Container["regnet"] = reg
 	logReaderLogger = arg.Logger
-	err := reader.Regnet.AddPatternsFromFile("/home/msi/Desktop/metricstream.regnet")
+	err := reg.AddPatternsFromFile("/home/msi/Desktop/metricstream.regnet")
 	if err != nil {
 		logReaderLogger.Logf("ERROR:", err)
 		os.Exit(1)
@@ -46,7 +49,7 @@ func (reader *LogReaderCompute) Execute(arg *compute.Args) {
 }
 
 func (reader *LogReaderCompute) process(file string, arg *compute.Args) { //, regexp *regexp.Regexp) {
-	logReaderLogger.Logf("Recevied request to parse file %s", file)
+	logReaderLogger.Logf("Received request to parse file %s", file)
 	//initialize http handler and listen for POST message, get file name from request
 
 	defer func() {
@@ -83,7 +86,9 @@ func (reader *LogReaderCompute) process(file string, arg *compute.Args) { //, re
 			logReaderLogger.Logf("Completed parsing file %s at %s:", file, time.Now().String())
 			break
 		}
-		exists, _ := reader.Regnet.Exists(line, "%{MS_DELIM}")
+		//exists, _ := reader.Regnet.Exists(line, "%{MS_DELIM}")
+		regnet := arg.Container["regnet"].(*regnet.Regnet)
+		exists, _ := regnet.Exists(line, "%{MS_DELIM}")
 		if exists {
 			if lg != nil && len(lg.Store) > 0 {
 				//push it further

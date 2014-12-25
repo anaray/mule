@@ -13,10 +13,12 @@ func LogTypeIndentifier() *LogTypeIndentifierCompute {
 func (identifier *LogTypeIndentifierCompute) String() string { return "compute.logtype_identifier" }
 
 func (identifier *LogTypeIndentifierCompute) Execute(arg *compute.Args) {
+	regnet := arg.Container["regnet"]
 	for {
-		//packet := <-arg.Incoming
-		//log := packet["log"].(*Logs)
-		//log.Store
+		packet := <-arg.Incoming
+		log := packet["log"].(*Logs)
+		log.Store
+		match, _ := regnet.MatchInText(log.Store, "%{MS_DELIM}")
 
 		//packetChannel <- packet
 	}
